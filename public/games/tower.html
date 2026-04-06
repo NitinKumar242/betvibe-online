@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tower Climb - BetVibe</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .tower-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .tower-display {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .tower-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .tower-floor {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tower-tile {
+            flex: 1;
+            aspect-ratio: 1;
+            background: linear-gradient(145deg, #2d2d44, #1a1a2e);
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .tower-tile:hover:not(.revealed):not(.disabled) {
+            background: linear-gradient(145deg, #3d3d5c, #2d2d44);
+            transform: scale(1.05);
+            border-color: #6366f1;
+        }
+
+        .tower-tile.revealed {
+            cursor: default;
+        }
+
+        .tower-tile.safe {
+            background: linear-gradient(145deg, #10b981, #059669);
+            border-color: #34d399;
+        }
+
+        .tower-tile.mine {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+            border-color: #f87171;
+        }
+
+        .tower-tile.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tower-tile .tile-content {
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .tower-tile .floor-number {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 10px;
+            color: #9ca3af;
+        }
+
+        .bet-controls {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .bet-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-input-group input {
+            flex: 1;
+            padding: 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .current-multiplier {
+            font-size: 28px;
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .current-floor {
+            color: #9ca3af;
+        }
+
+        .cashout-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 15px;
+        }
+
+        .cashout-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .cashout-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+
+        .multiplier-preview {
+            display: flex;
+            gap: 4px;
+            margin-top: 10px;
+            overflow-x: auto;
+            padding: 5px 0;
+        }
+
+        .multiplier-tile {
+            min-width: 50px;
+            padding: 8px;
+            background: #2d2d44;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .multiplier-tile.highlighted {
+            background: #6366f1;
+            color: #fff;
+        }
+
+        .game-result {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .game-result.win {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            border: 2px solid #10b981;
+        }
+
+        .game-result.lose {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid #ef4444;
+        }
+
+        .result-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-amount.win {
+            color: #10b981;
+        }
+
+        .result-amount.lose {
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="tower-container">
+        <h1>🏗️ Tower Climb</h1>
+
+        <div class="game-info">
+            <div>
+                <div class="current-floor">Floor: <span id="currentFloor">0</span>/12</div>
+            </div>
+            <div class="current-multiplier">
+                <span id="currentMultiplier">1.00</span>x
+            </div>
+        </div>
+
+        <div class="bet-controls" id="betControls">
+            <div class="bet-input-group">
+                <input type="number" id="betAmount" value="10" min="1" step="1" placeholder="Bet Amount">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; color: #9ca3af;">Multiplier Preview</label>
+                <div class="multiplier-preview" id="multiplierPreview"></div>
+            </div>
+
+            <button id="startBtn" class="cashout-btn" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                Start Climb
+            </button>
+        </div>
+
+        <div class="tower-display">
+            <div class="tower-grid" id="towerGrid"></div>
+        </div>
+
+        <button id="cashoutBtn" class="cashout-btn" disabled>
+            Cashout <span id="cashoutAmount">₹0.00</span>
+        </button>
+
+        <div class="game-result" id="gameResult"></div>
+
+        <div style="margin-top: 20px;">
+            <h3 style="color: #9ca3af; margin-bottom: 10px;">Recent History</h3>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const gameSlug = 'tower';
+        let gameState = null;
+
+        // Floor configurations (tiles per floor, multiplier)
+        const floorConfigs = [
+            { tiles: 2, multiplier: 1.95 },
+            { tiles: 3, multiplier: 2.90 },
+            { tiles: 4, multiplier: 3.85 },
+            { tiles: 5, multiplier: 4.80 },
+            { tiles: 5, multiplier: 5.75 },
+            { tiles: 5, multiplier: 6.70 },
+            { tiles: 5, multiplier: 7.65 },
+            { tiles: 5, multiplier: 8.60 },
+            { tiles: 5, multiplier: 9.55 },
+            { tiles: 5, multiplier: 10.50 },
+            { tiles: 5, multiplier: 11.45 },
+            { tiles: 5, multiplier: 12.40 }
+        ];
+
+        // Initialize tower grid
+        function initTower() {
+            const grid = document.getElementById('towerGrid');
+            grid.innerHTML = '';
+
+            // Create floors from top (12) to bottom (1)
+            for (let floor = 12; floor >= 1; floor--) {
+                const floorEl = document.createElement('div');
+                floorEl.className = 'tower-floor';
+                floorEl.dataset.floor = floor;
+
+                const config = floorConfigs[floor - 1];
+                for (let tile = 0; tile < config.tiles; tile++) {
+                    const tileEl = document.createElement('div');
+                    tileEl.className = 'tower-tile';
+                    tileEl.dataset.floor = floor;
+                    tileEl.dataset.tile = tile;
+                    tileEl.innerHTML = `<span class="floor-number">${floor}</span>`;
+                    tileEl.addEventListener('click', () => handleTileClick(floor, tile));
+                    floorEl.appendChild(tileEl);
+                }
+
+                grid.appendChild(floorEl);
+            }
+        }
+
+        // Update multiplier preview
+        function updateMultiplierPreview() {
+            const preview = document.getElementById('multiplierPreview');
+            preview.innerHTML = '';
+
+            let cumulativeMultiplier = 1.0;
+            for (let i = 0; i < 12; i++) {
+                cumulativeMultiplier *= floorConfigs[i].multiplier;
+                const tile = document.createElement('div');
+                tile.className = 'multiplier-tile';
+                tile.textContent = `F${i + 1}: ${cumulativeMultiplier.toFixed(2)}x`;
+                preview.appendChild(tile);
+            }
+        }
+
+        // Start game
+        document.getElementById('startBtn').addEventListener('click', async () => {
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bet_amount: betAmount
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    gameState = data.game_state;
+                    document.getElementById('betControls').style.display = 'none';
+                    document.getElementById('cashoutBtn').disabled = false;
+                    document.getElementById('gameResult').style.display = 'none';
+                    updateGameUI();
+                } else {
+                    alert(data.message || 'Failed to start game');
+                }
+            } catch (error) {
+                console.error('Error starting game:', error);
+                alert('Failed to start game');
+            }
+        });
+
+        // Handle tile click
+        async function handleTileClick(floor, tile) {
+            if (!gameState || gameState.status !== 'active') return;
+
+            const tileEl = document.querySelector(`[data-floor="${floor}"][data-tile="${tile}"]`);
+            if (tileEl.classList.contains('revealed')) return;
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/action`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: gameState.session_id,
+                        action: 'climb',
+                        floor: floor,
+                        tile: tile
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    gameState = data.game_state;
+                    updateGameUI();
+
+                    if (gameState.status === 'completed') {
+                        showResult(gameState);
+                    }
+                } else {
+                    alert(data.message || 'Failed to climb');
+                }
+            } catch (error) {
+                console.error('Error climbing:', error);
+                alert('Failed to climb');
+            }
+        }
+
+        // Cashout
+        document.getElementById('cashoutBtn').addEventListener('click', async () => {
+            if (!gameState || gameState.status !== 'active') return;
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/cashout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: gameState.session_id
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    gameState = data.game_state;
+                    showResult(gameState);
+                } else {
+                    alert(data.message || 'Failed to cashout');
+                }
+            } catch (error) {
+                console.error('Error cashing out:', error);
+                alert('Failed to cashout');
+            }
+        });
+
+        // Update game UI
+        function updateGameUI() {
+            const tiles = document.querySelectorAll('.tower-tile');
+
+            tiles.forEach(tile => {
+                const floor = parseInt(tile.dataset.floor);
+                const tileIndex = parseInt(tile.dataset.tile);
+
+                tile.classList.remove('revealed', 'safe', 'mine', 'disabled');
+
+                // Check if this tile was revealed
+                if (gameState.revealed_tiles) {
+                    const revealed = gameState.revealed_tiles.find(r => r.floor === floor && r.tile === tileIndex);
+                    if (revealed) {
+                        if (revealed.safe) {
+                            tile.classList.add('revealed', 'safe');
+                            tile.innerHTML = '<span class="tile-content">✓</span>';
+                        } else {
+                            tile.classList.add('revealed', 'mine');
+                            tile.innerHTML = '<span class="tile-content">💀</span>';
+                        }
+                    }
+                }
+
+                // Show all mines if game over
+                if (gameState.status === 'completed' && gameState.mine_positions) {
+                    const isMine = gameState.mine_positions.some(m => m.floor === floor && m.tile === tileIndex);
+                    if (isMine && !tile.classList.contains('revealed')) {
+                        tile.classList.add('revealed', 'mine');
+                        tile.innerHTML = '<span class="tile-content">💀</span>';
+                    }
+                }
+
+                // Disable tiles on completed floors or above current floor
+                if (gameState.status === 'active') {
+                    const currentFloor = gameState.current_floor || 0;
+                    if (floor > currentFloor + 1 || floor <= currentFloor) {
+                        tile.classList.add('disabled');
+                    }
+                }
+            });
+
+            document.getElementById('currentFloor').textContent = gameState.current_floor || 0;
+            document.getElementById('currentMultiplier').textContent = (gameState.current_multiplier || 1).toFixed(2);
+            document.getElementById('cashoutAmount').textContent = '₹' + (gameState.potential_win || 0).toFixed(2);
+
+            // Update multiplier preview highlight
+            const currentFloor = gameState.current_floor || 0;
+            const previewTiles = document.querySelectorAll('.multiplier-tile');
+            previewTiles.forEach((tile, i) => {
+                tile.classList.toggle('highlighted', i === currentFloor);
+            });
+        }
+
+        // Show result
+        function showResult(state) {
+            const resultDiv = document.getElementById('gameResult');
+            resultDiv.style.display = 'block';
+
+            if (state.won) {
+                resultDiv.className = 'game-result win';
+                resultDiv.innerHTML = `
+                    <h2>🎉 You Won!</h2>
+                    <div class="result-amount win">+₹${state.win_amount.toFixed(2)}</div>
+                    <p>Climbed ${state.current_floor} floors</p>
+                    <p>Final multiplier: ${state.final_multiplier.toFixed(2)}x</p>
+                `;
+            } else {
+                resultDiv.className = 'game-result lose';
+                resultDiv.innerHTML = `
+                    <h2>💥 Game Over!</h2>
+                    <div class="result-amount lose">-₹${state.bet_amount.toFixed(2)}</div>
+                    <p>Fell on floor ${state.current_floor}</p>
+                `;
+            }
+
+            document.getElementById('betControls').style.display = 'block';
+            document.getElementById('cashoutBtn').disabled = true;
+            gameState = null;
+
+            loadHistory();
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/history`);
+                const data = await response.json();
+
+                if (data.success && data.history) {
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = data.history.map(bet => `
+                        <div style="display: flex; justify-content: space-between; padding: 10px; background: #2d2d44; border-radius: 8px; margin-bottom: 8px;">
+                            <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                ${bet.won ? '✓' : '✗'} Floor ${bet.result?.current_floor || 0}
+                            </span>
+                            <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                ${bet.result?.final_multiplier?.toFixed(2) || '0.00'}x
+                            </span>
+                            <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                ${bet.won ? '+' : '-'}₹${Math.abs(bet.profit || 0).toFixed(2)}
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Initialize
+        initTower();
+        updateMultiplierPreview();
+        loadHistory();
+    </script>
+</body>
+
+</html>

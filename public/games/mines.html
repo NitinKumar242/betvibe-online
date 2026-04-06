@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mines - BetVibe</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .mines-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .mines-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin: 20px 0;
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .mine-tile {
+            aspect-ratio: 1;
+            background: linear-gradient(145deg, #2d2d44, #1a1a2e);
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mine-tile:hover:not(.revealed):not(.disabled) {
+            background: linear-gradient(145deg, #3d3d5c, #2d2d44);
+            transform: scale(1.05);
+            border-color: #6366f1;
+        }
+
+        .mine-tile.revealed {
+            cursor: default;
+        }
+
+        .mine-tile.safe {
+            background: linear-gradient(145deg, #10b981, #059669);
+            border-color: #34d399;
+        }
+
+        .mine-tile.mine {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+            border-color: #f87171;
+        }
+
+        .mine-tile.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .mine-tile .tile-content {
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .mines-controls {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .mines-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .mine-count-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .mine-count-btn {
+            padding: 8px 16px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .mine-count-btn:hover {
+            background: #3d3d5c;
+        }
+
+        .mine-count-btn.active {
+            background: #6366f1;
+            border-color: #818cf8;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .current-multiplier {
+            font-size: 28px;
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .tiles-remaining {
+            color: #9ca3af;
+        }
+
+        .cashout-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 15px;
+        }
+
+        .cashout-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .cashout-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+
+        .multiplier-preview {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 4px;
+            margin-top: 10px;
+        }
+
+        .multiplier-tile {
+            padding: 4px;
+            background: #2d2d44;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 10px;
+            color: #9ca3af;
+        }
+
+        .multiplier-tile.highlighted {
+            background: #6366f1;
+            color: #fff;
+        }
+
+        .game-result {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .game-result.win {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            border: 2px solid #10b981;
+        }
+
+        .game-result.lose {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid #ef4444;
+        }
+
+        .result-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-amount.win {
+            color: #10b981;
+        }
+
+        .result-amount.lose {
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="mines-container">
+        <h1>💣 Mines</h1>
+
+        <div class="game-info">
+            <div>
+                <div class="tiles-remaining">Tiles: <span id="tilesRemaining">25</span></div>
+                <div class="tiles-remaining">Mines: <span id="minesCount">3</span></div>
+            </div>
+            <div class="current-multiplier">
+                <span id="currentMultiplier">1.00</span>x
+            </div>
+        </div>
+
+        <div class="mines-controls" id="betControls">
+            <div class="mines-options">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #9ca3af;">Bet Amount</label>
+                    <input type="number" id="betAmount" value="10" min="1" step="1"
+                        style="width: 100%; padding: 10px; background: #2d2d44; border: 2px solid #3d3d5c; border-radius: 8px; color: #fff;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 8px; color: #9ca3af;">Number of Mines</label>
+                    <div class="mine-count-selector" id="mineCountSelector">
+                        <button class="mine-count-btn active" data-mines="1">1</button>
+                        <button class="mine-count-btn" data-mines="3">3</button>
+                        <button class="mine-count-btn" data-mines="5">5</button>
+                        <button class="mine-count-btn" data-mines="10">10</button>
+                        <button class="mine-count-btn" data-mines="15">15</button>
+                        <button class="mine-count-btn" data-mines="20">20</button>
+                        <button class="mine-count-btn" data-mines="24">24</button>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; color: #9ca3af;">Multiplier Preview</label>
+                <div class="multiplier-preview" id="multiplierPreview"></div>
+            </div>
+
+            <button id="startBtn" class="cashout-btn" style="background: linear-gradient(135deg, #6366f1, #4f46e5);">
+                Start Game
+            </button>
+        </div>
+
+        <div class="mines-grid" id="minesGrid"></div>
+
+        <button id="cashoutBtn" class="cashout-btn" disabled>
+            Cashout <span id="cashoutAmount">₹0.00</span>
+        </button>
+
+        <div class="game-result" id="gameResult"></div>
+
+        <div style="margin-top: 20px;">
+            <h3 style="color: #9ca3af; margin-bottom: 10px;">Recent History</h3>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const gameSlug = 'mines';
+        let gameState = null;
+        let selectedMines = 3;
+
+        // Initialize mine count selector
+        document.querySelectorAll('.mine-count-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mine-count-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedMines = parseInt(btn.dataset.mines);
+                document.getElementById('minesCount').textContent = selectedMines;
+                updateMultiplierPreview();
+            });
+        });
+
+        // Update multiplier preview
+        function updateMultiplierPreview() {
+            const preview = document.getElementById('multiplierPreview');
+            preview.innerHTML = '';
+
+            let multiplier = 1.0;
+            for (let i = 1; i <= 25 - selectedMines; i++) {
+                multiplier *= ((25 - selectedMines - (i - 1)) / (25 - (i - 1))) * 0.97;
+                const tile = document.createElement('div');
+                tile.className = 'multiplier-tile';
+                tile.textContent = multiplier.toFixed(2) + 'x';
+                preview.appendChild(tile);
+            }
+        }
+
+        // Initialize grid
+        function initGrid() {
+            const grid = document.getElementById('minesGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 25; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'mine-tile';
+                tile.dataset.index = i;
+                tile.addEventListener('click', () => handleTileClick(i));
+                grid.appendChild(tile);
+            }
+        }
+
+        // Start game
+        document.getElementById('startBtn').addEventListener('click', async () => {
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bet_amount: betAmount,
+                        mine_count: selectedMines
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    gameState = data.game_state;
+                    document.getElementById('betControls').style.display = 'none';
+                    document.getElementById('cashoutBtn').disabled = false;
+                    document.getElementById('gameResult').style.display = 'none';
+                    updateGameUI();
+                } else {
+                    alert(data.message || 'Failed to start game');
+                }
+            } catch (error) {
+                console.error('Error starting game:', error);
+                alert('Failed to start game');
+            }
+        });
+
+        // Handle tile click
+        async function handleTileClick(index) {
+            if (!gameState || gameState.status !== 'active') return;
+
+            const tile = document.querySelector(`[data-index="${index}"]`);
+            if (tile.classList.contains('revealed')) return;
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/action`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: gameState.session_id,
+                        action: 'reveal',
+                        tile_index: index
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    gameState = data.game_state;
+                    updateGameUI();
+
+                    if (gameState.status === 'completed') {
+                        showResult(gameState);
+                    }
+                } else {
+                    alert(data.message || 'Failed to reveal tile');
+                }
+            } catch (error) {
+                console.error('Error revealing tile:', error);
+                alert('Failed to reveal tile');
+            }
+        }
+
+        // Cashout
+        document.getElementById('cashoutBtn').addEventListener('click', async () => {
+            if (!gameState || gameState.status !== 'active') return;
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/cashout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        session_id: gameState.session_id
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    gameState = data.game_state;
+                    showResult(gameState);
+                } else {
+                    alert(data.message || 'Failed to cashout');
+                }
+            } catch (error) {
+                console.error('Error cashing out:', error);
+                alert('Failed to cashout');
+            }
+        });
+
+        // Update game UI
+        function updateGameUI() {
+            const grid = document.getElementById('minesGrid');
+            const tiles = grid.querySelectorAll('.mine-tile');
+
+            tiles.forEach((tile, index) => {
+                tile.classList.remove('revealed', 'safe', 'mine', 'disabled');
+
+                if (gameState.revealed_tiles && gameState.revealed_tiles.includes(index)) {
+                    tile.classList.add('revealed', 'safe');
+                    tile.innerHTML = '<span class="tile-content">💎</span>';
+                } else if (gameState.mine_positions && gameState.mine_positions.includes(index)) {
+                    if (gameState.status === 'completed') {
+                        tile.classList.add('revealed', 'mine');
+                        tile.innerHTML = '<span class="tile-content">💣</span>';
+                    }
+                } else if (gameState.status === 'completed') {
+                    tile.classList.add('revealed');
+                    tile.innerHTML = '<span class="tile-content">💎</span>';
+                } else {
+                    tile.classList.add('disabled');
+                }
+            });
+
+            document.getElementById('currentMultiplier').textContent = gameState.current_multiplier.toFixed(2);
+            document.getElementById('tilesRemaining').textContent = 25 - (gameState.revealed_tiles?.length || 0);
+            document.getElementById('cashoutAmount').textContent = '₹' + (gameState.potential_win || 0).toFixed(2);
+
+            // Update multiplier preview highlight
+            const revealed = gameState.revealed_tiles?.length || 0;
+            const previewTiles = document.querySelectorAll('.multiplier-tile');
+            previewTiles.forEach((tile, i) => {
+                tile.classList.toggle('highlighted', i === revealed);
+            });
+        }
+
+        // Show result
+        function showResult(state) {
+            const resultDiv = document.getElementById('gameResult');
+            resultDiv.style.display = 'block';
+
+            if (state.won) {
+                resultDiv.className = 'game-result win';
+                resultDiv.innerHTML = `
+                    <h2>🎉 You Won!</h2>
+                    <div class="result-amount win">+₹${state.win_amount.toFixed(2)}</div>
+                    <p>Cashed out at ${state.final_multiplier.toFixed(2)}x</p>
+                `;
+            } else {
+                resultDiv.className = 'game-result lose';
+                resultDiv.innerHTML = `
+                    <h2>💥 Game Over!</h2>
+                    <div class="result-amount lose">-₹${state.bet_amount.toFixed(2)}</div>
+                    <p>Hit a mine after revealing ${state.revealed_tiles?.length || 0} tiles</p>
+                `;
+            }
+
+            document.getElementById('betControls').style.display = 'block';
+            document.getElementById('cashoutBtn').disabled = true;
+            gameState = null;
+
+            loadHistory();
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/history`);
+                const data = await response.json();
+
+                if (data.success && data.history) {
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = data.history.map(bet => `
+                        <div style="display: flex; justify-content: space-between; padding: 10px; background: #2d2d44; border-radius: 8px; margin-bottom: 8px;">
+                            <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                ${bet.won ? '✓' : '✗'} ${bet.final_multiplier?.toFixed(2) || '0.00'}x
+                            </span>
+                            <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                ${bet.won ? '+' : '-'}₹${Math.abs(bet.profit || 0).toFixed(2)}
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Initialize
+        initGrid();
+        updateMultiplierPreview();
+        loadHistory();
+    </script>
+</body>
+
+</html>

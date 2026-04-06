@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HiLo Cards - BetVibe</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .hilo-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card-display {
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+            border-radius: 20px;
+            padding: 40px 20px;
+            margin: 20px 0;
+            text-align: center;
+            border: 4px solid #6366f1;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .card {
+            width: 120px;
+            height: 168px;
+            background: linear-gradient(145deg, #fff, #e5e7eb);
+            border-radius: 12px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .card.red {
+            color: #ef4444;
+        }
+
+        .card.black {
+            color: #1f2937;
+        }
+
+        .card.flipping {
+            animation: flip 0.5s ease;
+        }
+
+        @keyframes flip {
+            0% {
+                transform: rotateY(0deg);
+            }
+
+            50% {
+                transform: rotateY(90deg);
+            }
+
+            100% {
+                transform: rotateY(0deg);
+            }
+        }
+
+        .card-label {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-top: 15px;
+        }
+
+        .bet-controls {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .bet-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-input-group input {
+            flex: 1;
+            padding: 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .bet-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-option {
+            padding: 25px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .bet-option:hover {
+            background: #3d3d5c;
+        }
+
+        .bet-option.selected {
+            background: #6366f1;
+            border-color: #818cf8;
+        }
+
+        .bet-option .option-name {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .bet-option .multiplier {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .play-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .play-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+
+        .game-result {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .game-result.win {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            border: 2px solid #10b981;
+        }
+
+        .game-result.lose {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid #ef4444;
+        }
+
+        .game-result.push {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2));
+            border: 2px solid #fbbf24;
+        }
+
+        .result-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-amount.win {
+            color: #10b981;
+        }
+
+        .result-amount.lose {
+            color: #ef4444;
+        }
+
+        .result-amount.push {
+            color: #fbbf24;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .history-item .cards {
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="hilo-container">
+        <h1>🃏 HiLo Cards</h1>
+
+        <div class="card-display">
+            <div class="card" id="currentCard">
+                <span id="cardValue">?</span>
+            </div>
+            <div class="card-label">Current Card</div>
+        </div>
+
+        <div class="bet-controls">
+            <div class="bet-input-group">
+                <input type="number" id="betAmount" value="10" min="1" step="1" placeholder="Bet Amount">
+            </div>
+
+            <div class="bet-options">
+                <div class="bet-option" data-bet="higher">
+                    <div class="option-name">Higher</div>
+                    <div class="multiplier" id="higherMultiplier">1.9x</div>
+                </div>
+                <div class="bet-option" data-bet="lower">
+                    <div class="option-name">Lower</div>
+                    <div class="multiplier" id="lowerMultiplier">1.9x</div>
+                </div>
+            </div>
+
+            <button id="playBtn" class="play-btn" disabled>Draw Card</button>
+        </div>
+
+        <div class="game-result" id="gameResult"></div>
+
+        <div style="margin-top: 20px;">
+            <h3 style="color: #9ca3af; margin-bottom: 10px;">Recent History</h3>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const gameSlug = 'hilo';
+        let selectedBet = null;
+        let isPlaying = false;
+
+        // Card values
+        const cardValues = {
+            2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: '10',
+            11: 'J', 12: 'Q', 13: 'K', 14: 'A'
+        };
+
+        const cardSuits = ['♠', '♥', '♦', '♣'];
+
+        // Bet option selection
+        document.querySelectorAll('.bet-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.bet-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedBet = option.dataset.bet;
+                updatePlayButton();
+            });
+        });
+
+        // Update play button state
+        function updatePlayButton() {
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+            document.getElementById('playBtn').disabled = !selectedBet || isNaN(betAmount) || betAmount < 1 || isPlaying;
+        }
+
+        document.getElementById('betAmount').addEventListener('input', updatePlayButton);
+
+        // Update card display
+        function updateCardDisplay(card) {
+            const cardEl = document.getElementById('currentCard');
+            const valueEl = document.getElementById('cardValue');
+
+            cardEl.classList.remove('red', 'black');
+            cardEl.classList.add(card.suit === '♥' || card.suit === '♦' ? 'red' : 'black');
+
+            valueEl.textContent = cardValues[card.value] + card.suit;
+        }
+
+        // Play game
+        document.getElementById('playBtn').addEventListener('click', async () => {
+            if (isPlaying || !selectedBet) return;
+
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+
+            isPlaying = true;
+            updatePlayButton();
+            document.getElementById('gameResult').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/play`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bet_amount: betAmount,
+                        bet_type: selectedBet
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Flip animation
+                    const cardEl = document.getElementById('currentCard');
+                    cardEl.classList.add('flipping');
+
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                    // Update card
+                    updateCardDisplay(data.result.next_card);
+                    cardEl.classList.remove('flipping');
+
+                    // Show result
+                    showResult(data.result);
+                    loadHistory();
+                } else {
+                    alert(data.message || 'Failed to play');
+                    isPlaying = false;
+                    updatePlayButton();
+                }
+            } catch (error) {
+                console.error('Error playing:', error);
+                alert('Failed to play');
+                isPlaying = false;
+                updatePlayButton();
+            }
+        });
+
+        // Show result
+        function showResult(result) {
+            const gameResult = document.getElementById('gameResult');
+            gameResult.style.display = 'block';
+
+            const prevCard = cardValues[result.previous_card?.value] + result.previous_card?.suit;
+            const nextCard = cardValues[result.next_card?.value] + result.next_card?.suit;
+
+            gameResult.innerHTML = `
+                <div style="font-size: 18px; margin: 10px 0;">
+                    ${prevCard} → <strong>${nextCard}</strong>
+                </div>
+            `;
+
+            if (result.won) {
+                gameResult.className = 'game-result win';
+                gameResult.innerHTML += `
+                    <h2>🎉 You Won!</h2>
+                    <div class="result-amount win">+₹${result.profit.toFixed(2)}</div>
+                    <p>Multiplier: ${result.multiplier.toFixed(2)}x</p>
+                `;
+            } else if (result.push) {
+                gameResult.className = 'game-result push';
+                gameResult.innerHTML += `
+                    <h2>🤝 Push!</h2>
+                    <div class="result-amount push">₹0.00</div>
+                    <p>Same card value - bet returned</p>
+                `;
+            } else {
+                gameResult.className = 'game-result lose';
+                gameResult.innerHTML += `
+                    <h2>😢 You Lost!</h2>
+                    <div class="result-amount lose">-₹${result.bet_amount.toFixed(2)}</div>
+                    <p>Next card was ${result.next_card?.value}</p>
+                `;
+            }
+
+            isPlaying = false;
+            updatePlayButton();
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/history`);
+                const data = await response.json();
+
+                if (data.success && data.history) {
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = data.history.slice(0, 10).map(bet => {
+                        const prev = cardValues[bet.result?.previous_card?.value] + bet.result?.previous_card?.suit || '?';
+                        const next = cardValues[bet.result?.next_card?.value] + bet.result?.next_card?.suit || '?';
+
+                        return `
+                            <div class="history-item">
+                                <span class="cards">${prev} → ${next}</span>
+                                <span style="color: ${bet.push ? '#fbbf24' : (bet.won ? '#10b981' : '#ef4444')};">
+                                    ${bet.push ? 'Push' : (bet.won ? 'Won' : 'Lost')}
+                                </span>
+                                <span style="color: ${bet.won ? '#10b981' : (bet.push ? '#fbbf24' : '#ef4444')};">
+                                    ${bet.won ? '+' : (bet.push ? '' : '-')}₹${Math.abs(bet.profit || 0).toFixed(2)}
+                                </span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Initialize
+        updatePlayButton();
+        loadHistory();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limbo - BetVibe</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .limbo-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .multiplier-display {
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+            border-radius: 20px;
+            padding: 40px 20px;
+            margin: 20px 0;
+            text-align: center;
+            border: 4px solid #6366f1;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .multiplier-value {
+            font-size: 72px;
+            font-weight: bold;
+            color: #10b981;
+            transition: all 0.3s ease;
+        }
+
+        .multiplier-value.rolling {
+            animation: pulse 0.5s ease infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .multiplier-value.crashed {
+            color: #ef4444;
+        }
+
+        .multiplier-label {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .bet-controls {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .bet-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-input-group input {
+            flex: 1;
+            padding: 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .target-input-group {
+            margin-bottom: 15px;
+        }
+
+        .target-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #9ca3af;
+        }
+
+        .target-input-group input {
+            width: 100%;
+            padding: 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .target-input-group .range-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .win-chance {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .win-chance .label {
+            color: #9ca3af;
+        }
+
+        .win-chance .value {
+            color: #6366f1;
+            font-weight: bold;
+        }
+
+        .potential-payout {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .potential-payout .label {
+            color: #9ca3af;
+        }
+
+        .potential-payout .value {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .play-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .play-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+
+        .game-result {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .game-result.win {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            border: 2px solid #10b981;
+        }
+
+        .game-result.lose {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid #ef4444;
+        }
+
+        .result-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-amount.win {
+            color: #10b981;
+        }
+
+        .result-amount.lose {
+            color: #ef4444;
+        }
+
+        .result-multiplier {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .history-item .target {
+            color: #6366f1;
+            font-weight: bold;
+        }
+
+        .history-item .result {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .history-item .result.lose {
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="limbo-container">
+        <h1>🎯 Limbo</h1>
+
+        <div class="multiplier-display">
+            <div class="multiplier-value" id="multiplierValue">1.00x</div>
+            <div class="multiplier-label">Result Multiplier</div>
+        </div>
+
+        <div class="bet-controls">
+            <div class="bet-input-group">
+                <input type="number" id="betAmount" value="10" min="1" step="1" placeholder="Bet Amount">
+            </div>
+
+            <div class="target-input-group">
+                <label>Target Multiplier</label>
+                <input type="number" id="targetMultiplier" value="2.00" min="1.01" max="1000" step="0.01">
+                <div class="range-info">
+                    <span>Min: 1.01x</span>
+                    <span>Max: 1000x</span>
+                </div>
+            </div>
+
+            <div class="win-chance">
+                <span class="label">Win Chance</span>
+                <span class="value" id="winChance">49.25%</span>
+            </div>
+
+            <div class="potential-payout">
+                <span class="label">Potential Payout</span>
+                <span class="value" id="potentialPayout">₹19.50</span>
+            </div>
+
+            <button id="playBtn" class="play-btn">Bet</button>
+        </div>
+
+        <div class="game-result" id="gameResult"></div>
+
+        <div style="margin-top: 20px;">
+            <h3 style="color: #9ca3af; margin-bottom: 10px;">Recent History</h3>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const gameSlug = 'limbo';
+        let isPlaying = false;
+
+        // Update win chance and potential payout
+        function updateCalculations() {
+            const betAmount = parseFloat(document.getElementById('betAmount').value) || 0;
+            const targetMultiplier = parseFloat(document.getElementById('targetMultiplier').value) || 1.01;
+
+            // Win chance = 97 / targetMultiplier (3% house edge)
+            const winChance = Math.min(97 / targetMultiplier, 99);
+            document.getElementById('winChance').textContent = winChance.toFixed(2) + '%';
+
+            // Potential payout = bet * (targetMultiplier - 0.03)
+            const potentialPayout = betAmount * (targetMultiplier - 0.03);
+            document.getElementById('potentialPayout').textContent = '₹' + potentialPayout.toFixed(2);
+        }
+
+        document.getElementById('betAmount').addEventListener('input', updateCalculations);
+        document.getElementById('targetMultiplier').addEventListener('input', updateCalculations);
+
+        // Roll animation
+        async function rollMultiplier(finalValue) {
+            const multiplierEl = document.getElementById('multiplierValue');
+            multiplierEl.classList.add('rolling');
+
+            const duration = 2000;
+            const startTime = Date.now();
+            const startValue = 1.00;
+
+            return new Promise(resolve => {
+                const animate = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    // Easing function
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+
+                    const currentValue = startValue + (finalValue - startValue) * easeOut;
+                    multiplierEl.textContent = currentValue.toFixed(2) + 'x';
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        multiplierEl.classList.remove('rolling');
+                        multiplierEl.textContent = finalValue.toFixed(2) + 'x';
+                        resolve();
+                    }
+                };
+
+                animate();
+            });
+        }
+
+        // Play game
+        document.getElementById('playBtn').addEventListener('click', async () => {
+            if (isPlaying) return;
+
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+            const targetMultiplier = parseFloat(document.getElementById('targetMultiplier').value);
+
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+
+            if (isNaN(targetMultiplier) || targetMultiplier < 1.01 || targetMultiplier > 1000) {
+                alert('Please enter a valid target multiplier (1.01 - 1000)');
+                return;
+            }
+
+            isPlaying = true;
+            document.getElementById('playBtn').disabled = true;
+            document.getElementById('gameResult').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/play`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bet_amount: betAmount,
+                        target_multiplier: targetMultiplier
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Roll animation
+                    await rollMultiplier(data.result.multiplier);
+
+                    // Show result
+                    showResult(data.result);
+                    loadHistory();
+                } else {
+                    alert(data.message || 'Failed to place bet');
+                    isPlaying = false;
+                    document.getElementById('playBtn').disabled = false;
+                }
+            } catch (error) {
+                console.error('Error playing game:', error);
+                alert('Failed to place bet');
+                isPlaying = false;
+                document.getElementById('playBtn').disabled = false;
+            }
+        });
+
+        // Show result
+        function showResult(result) {
+            const gameResult = document.getElementById('gameResult');
+            const multiplierEl = document.getElementById('multiplierValue');
+
+            gameResult.style.display = 'block';
+
+            if (result.won) {
+                multiplierEl.classList.remove('crashed');
+                gameResult.className = 'game-result win';
+                gameResult.innerHTML = `
+                    <h2>🎉 You Won!</h2>
+                    <div class="result-multiplier">Result: ${result.multiplier.toFixed(2)}x</div>
+                    <div class="result-amount win">+₹${result.profit.toFixed(2)}</div>
+                    <p>Target: ${result.target_multiplier.toFixed(2)}x</p>
+                `;
+            } else {
+                multiplierEl.classList.add('crashed');
+                gameResult.className = 'game-result lose';
+                gameResult.innerHTML = `
+                    <h2>😢 You Lost!</h2>
+                    <div class="result-multiplier">Result: ${result.multiplier.toFixed(2)}x</div>
+                    <div class="result-amount lose">-₹${result.bet_amount.toFixed(2)}</div>
+                    <p>Target: ${result.target_multiplier.toFixed(2)}x</p>
+                `;
+            }
+
+            isPlaying = false;
+            document.getElementById('playBtn').disabled = false;
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/history`);
+                const data = await response.json();
+
+                if (data.success && data.history) {
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = data.history.slice(0, 10).map(bet => `
+                        <div class="history-item">
+                            <span class="target">Target: ${bet.result?.target_multiplier?.toFixed(2) || '?'}x</span>
+                            <span class="result ${bet.won ? '' : 'lose'}">${bet.result?.multiplier?.toFixed(2) || '?'}x</span>
+                            <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                ${bet.won ? '+' : '-'}₹${Math.abs(bet.profit || 0).toFixed(2)}
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Initialize
+        updateCalculations();
+        loadHistory();
+    </script>
+</body>
+
+</html>

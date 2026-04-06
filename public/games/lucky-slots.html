@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucky Slots - BetVibe</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .slots-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .slot-machine {
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+            border: 4px solid #6366f1;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .slot-display {
+            background: #000;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 3px solid #fbbf24;
+        }
+
+        .reels-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .reel {
+            width: 80px;
+            height: 100px;
+            background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            border: 2px solid #374151;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .reel.spinning .symbol {
+            animation: spin 0.1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: translateY(-100%);
+            }
+
+            100% {
+                transform: translateY(100%);
+            }
+        }
+
+        .reel .symbol {
+            transition: transform 0.3s ease;
+        }
+
+        .paylines {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .payline {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4b5563;
+            border: 2px solid #6b7280;
+        }
+
+        .payline.active {
+            background: #10b981;
+            border-color: #34d399;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .bet-controls {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .bet-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-input-group input {
+            flex: 1;
+            padding: 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .payout-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .payout-info .label {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .payout-info .value {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .spin-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .spin-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+        }
+
+        .spin-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+            color: #9ca3af;
+        }
+
+        .game-result {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .game-result.win {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            border: 2px solid #10b981;
+        }
+
+        .game-result.lose {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid #ef4444;
+        }
+
+        .result-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-amount.win {
+            color: #10b981;
+        }
+
+        .result-amount.lose {
+            color: #ef4444;
+        }
+
+        .winning-combination {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+
+        .payout-table {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+
+        .payout-table h3 {
+            color: #9ca3af;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .payout-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: #2d2d44;
+            border-radius: 6px;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .payout-row .symbols {
+            font-size: 18px;
+        }
+
+        .payout-row .multiplier {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .history-item .combination {
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="slots-container">
+        <h1>🎰 Lucky Slots</h1>
+
+        <div class="slot-machine">
+            <div class="slot-display">
+                <div class="reels-container">
+                    <div class="reel" id="reel1"><span class="symbol">🍒</span></div>
+                    <div class="reel" id="reel2"><span class="symbol">🍒</span></div>
+                    <div class="reel" id="reel3"><span class="symbol">🍒</span></div>
+                </div>
+                <div class="paylines">
+                    <div class="payline active" id="payline1"></div>
+                    <div class="payline" id="payline2"></div>
+                    <div class="payline" id="payline3"></div>
+                    <div class="payline" id="payline4"></div>
+                    <div class="payline" id="payline5"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bet-controls">
+            <div class="bet-input-group">
+                <input type="number" id="betAmount" value="10" min="1" step="1" placeholder="Bet Amount">
+            </div>
+
+            <div class="payout-info">
+                <div>
+                    <div class="label">Max Win</div>
+                    <div class="value" id="maxWin">₹1000.00</div>
+                </div>
+                <div>
+                    <div class="label">Paylines</div>
+                    <div class="value">5</div>
+                </div>
+            </div>
+
+            <button id="spinBtn" class="spin-btn">SPIN</button>
+        </div>
+
+        <div class="game-result" id="gameResult"></div>
+
+        <div class="payout-table">
+            <h3>PAYOUT TABLE</h3>
+            <div class="payout-row">
+                <span class="symbols">💎💎💎</span>
+                <span class="multiplier">100x</span>
+            </div>
+            <div class="payout-row">
+                <span class="symbols">7️⃣7️⃣7️⃣</span>
+                <span class="multiplier">30x</span>
+            </div>
+            <div class="payout-row">
+                <span class="symbols">🍇🍇🍇</span>
+                <span class="multiplier">10x</span>
+            </div>
+            <div class="payout-row">
+                <span class="symbols">🍊🍊🍊</span>
+                <span class="multiplier">5x</span>
+            </div>
+            <div class="payout-row">
+                <span class="symbols">🍋🍋🍋</span>
+                <span class="multiplier">3x</span>
+            </div>
+            <div class="payout-row">
+                <span class="symbols">🍒🍒🍒</span>
+                <span class="multiplier">2x</span>
+            </div>
+            <div class="payout-row">
+                <span class="symbols">🍒🍒</span>
+                <span class="multiplier">1.5x</span>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <h3 style="color: #9ca3af; margin-bottom: 10px;">Recent History</h3>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const gameSlug = 'lucky-slots';
+        let isSpinning = false;
+
+        // Symbols with their emojis
+        const symbols = {
+            cherry: '🍒',
+            lemon: '🍋',
+            orange: '🍊',
+            grape: '🍇',
+            seven: '7️⃣',
+            diamond: '💎'
+        };
+
+        // Payout multipliers
+        const payouts = {
+            'diamond': 100,
+            'seven': 30,
+            'grape': 10,
+            'orange': 5,
+            'lemon': 3,
+            'cherry': 2
+        };
+
+        // Update max win display
+        function updateMaxWin() {
+            const betAmount = parseFloat(document.getElementById('betAmount').value) || 0;
+            document.getElementById('maxWin').textContent = '₹' + (betAmount * 100).toFixed(2);
+        }
+
+        document.getElementById('betAmount').addEventListener('input', updateMaxWin);
+
+        // Spin reels
+        function spinReels() {
+            const reels = [
+                document.getElementById('reel1'),
+                document.getElementById('reel2'),
+                document.getElementById('reel3')
+            ];
+
+            reels.forEach(reel => {
+                reel.classList.add('spinning');
+                const symbol = reel.querySelector('.symbol');
+                symbol.textContent = getRandomSymbol();
+            });
+        }
+
+        // Get random symbol
+        function getRandomSymbol() {
+            const symbolKeys = Object.keys(symbols);
+            return symbols[symbolKeys[Math.floor(Math.random() * symbolKeys.length)]];
+        }
+
+        // Stop reels one by one
+        async function stopReels(finalSymbols) {
+            const reels = [
+                document.getElementById('reel1'),
+                document.getElementById('reel2'),
+                document.getElementById('reel3')
+            ];
+
+            for (let i = 0; i < reels.length; i++) {
+                await new Promise(resolve => setTimeout(resolve, 500));
+                reels[i].classList.remove('spinning');
+                reels[i].querySelector('.symbol').textContent = symbols[finalSymbols[i]];
+            }
+        }
+
+        // Update paylines
+        function updatePaylines(winningPaylines) {
+            for (let i = 1; i <= 5; i++) {
+                const payline = document.getElementById(`payline${i}`);
+                if (winningPaylines && winningPaylines.includes(i)) {
+                    payline.classList.add('active');
+                } else {
+                    payline.classList.remove('active');
+                }
+            }
+        }
+
+        // Spin game
+        document.getElementById('spinBtn').addEventListener('click', async () => {
+            if (isSpinning) return;
+
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+
+            isSpinning = true;
+            document.getElementById('spinBtn').disabled = true;
+            document.getElementById('gameResult').style.display = 'none';
+
+            // Start spinning
+            spinReels();
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/play`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bet_amount: betAmount
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Stop reels with final symbols
+                    await stopReels(data.result.symbols);
+
+                    // Update paylines
+                    updatePaylines(data.result.winning_paylines);
+
+                    // Show result
+                    showResult(data.result);
+                    loadHistory();
+                } else {
+                    alert(data.message || 'Failed to spin');
+                    isSpinning = false;
+                    document.getElementById('spinBtn').disabled = false;
+                }
+            } catch (error) {
+                console.error('Error spinning:', error);
+                alert('Failed to spin');
+                isSpinning = false;
+                document.getElementById('spinBtn').disabled = false;
+            }
+        });
+
+        // Show result
+        function showResult(result) {
+            const gameResult = document.getElementById('gameResult');
+            gameResult.style.display = 'block';
+
+            const combination = result.symbols.map(s => symbols[s]).join('');
+
+            if (result.won) {
+                gameResult.className = 'game-result win';
+                gameResult.innerHTML = `
+                    <h2>🎉 You Won!</h2>
+                    <div class="winning-combination">${combination}</div>
+                    <div class="result-amount win">+₹${result.profit.toFixed(2)}</div>
+                    <p>Multiplier: ${result.multiplier.toFixed(2)}x</p>
+                    <p>Winning Paylines: ${result.winning_paylines?.join(', ') || 'None'}</p>
+                `;
+            } else {
+                gameResult.className = 'game-result lose';
+                gameResult.innerHTML = `
+                    <h2>😢 No Win!</h2>
+                    <div class="winning-combination">${combination}</div>
+                    <div class="result-amount lose">-₹${result.bet_amount.toFixed(2)}</div>
+                    <p>Try again!</p>
+                `;
+            }
+
+            isSpinning = false;
+            document.getElementById('spinBtn').disabled = false;
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/history`);
+                const data = await response.json();
+
+                if (data.success && data.history) {
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = data.history.slice(0, 10).map(bet => {
+                        const combination = (bet.result?.symbols || []).map(s => symbols[s] || '?').join('');
+                        return `
+                            <div class="history-item">
+                                <span class="combination">${combination}</span>
+                                <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                    ${bet.result?.multiplier?.toFixed(2) || '0.00'}x
+                                </span>
+                                <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                    ${bet.won ? '+' : '-'}₹${Math.abs(bet.profit || 0).toFixed(2)}
+                                </span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Initialize
+        updateMaxWin();
+        loadHistory();
+    </script>
+</body>
+
+</html>

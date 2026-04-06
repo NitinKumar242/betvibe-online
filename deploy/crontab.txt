@@ -1,0 +1,26 @@
+# BetVibe – Complete Crontab
+# Install: crontab -e and paste this, or run: crontab deploy/crontab.txt
+
+# ──── Daily Quests (midnight NPT = 18:15 UTC) ────
+15 18 * * * cd /var/www/betvibe && /usr/bin/php cron/daily_quests.php >> storage/logs/cron_quests.log 2>&1
+
+# ──── Weekly Leaderboard Rewards (Sunday midnight NPT = Saturday 18:15 UTC) ────
+15 18 * * 6 cd /var/www/betvibe && /usr/bin/php cron/leaderboard.php >> storage/logs/cron_leaderboard.log 2>&1
+
+# ──── Lucky Hours Push Notification (14:10 UTC = ~7:55pm NPT) ────
+10 14 * * * cd /var/www/betvibe && /usr/bin/php cron/lucky_hours_notify.php >> storage/logs/cron_push.log 2>&1
+
+# ──── Fraud Detection Scan (every 6 hours) ────
+0 */6 * * * cd /var/www/betvibe && /usr/bin/php cron/fraud_scan.php >> storage/logs/cron_fraud.log 2>&1
+
+# ──── Expired Session Cleanup (daily at 3am UTC) ────
+0 3 * * * cd /var/www/betvibe && /usr/bin/php cron/cleanup_sessions.php >> storage/logs/cron_cleanup.log 2>&1
+
+# ──── Database Backup (daily at 4am UTC) ────
+0 4 * * * mysqldump -u betvibe_user -p"${DB_PASS}" betvibe_db | gzip > /var/backups/betvibe/db_$(date +\%Y\%m\%d).sql.gz 2>&1
+
+# ──── Storage Cleanup: Remove old win cards (>30 days) ────
+0 5 * * * find /var/www/betvibe/storage/win_cards -type f -mtime +30 -delete 2>&1
+
+# ──── Storage Cleanup: Remove old WebSocket queue files (>1 hour) ────
+*/5 * * * * find /var/www/betvibe/storage/ws_queue -type f -mmin +60 -delete 2>/dev/null

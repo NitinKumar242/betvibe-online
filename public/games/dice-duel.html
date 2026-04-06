@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dice Duel - BetVibe</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .dice-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .dice-display {
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+            border-radius: 20px;
+            padding: 40px 20px;
+            margin: 20px 0;
+            text-align: center;
+            border: 4px solid #6366f1;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .dice-value {
+            font-size: 72px;
+            font-weight: bold;
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        .dice-value.rolling {
+            animation: shake 0.1s ease infinite;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .dice-label {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .bet-controls {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .bet-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-input-group input {
+            flex: 1;
+            padding: 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .threshold-input-group {
+            margin-bottom: 15px;
+        }
+
+        .threshold-input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #9ca3af;
+        }
+
+        .threshold-input-group input {
+            width: 100%;
+            padding: 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .threshold-input-group .range-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .bet-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-option {
+            padding: 20px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .bet-option:hover {
+            background: #3d3d5c;
+        }
+
+        .bet-option.selected {
+            background: #6366f1;
+            border-color: #818cf8;
+        }
+
+        .bet-option .option-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .bet-option .multiplier {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+
+        .win-chance {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .win-chance .label {
+            color: #9ca3af;
+        }
+
+        .win-chance .value {
+            color: #6366f1;
+            font-weight: bold;
+        }
+
+        .potential-payout {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .potential-payout .label {
+            color: #9ca3af;
+        }
+
+        .potential-payout .value {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .play-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .play-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+
+        .game-result {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .game-result.win {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            border: 2px solid #10b981;
+        }
+
+        .game-result.lose {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid #ef4444;
+        }
+
+        .result-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-amount.win {
+            color: #10b981;
+        }
+
+        .result-amount.lose {
+            color: #ef4444;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .history-item .roll {
+            color: #6366f1;
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dice-container">
+        <h1>🎲 Dice Duel</h1>
+
+        <div class="dice-display">
+            <div class="dice-value" id="diceValue">50</div>
+            <div class="dice-label">Roll Result (1-100)</div>
+        </div>
+
+        <div class="bet-controls">
+            <div class="bet-input-group">
+                <input type="number" id="betAmount" value="10" min="1" step="1" placeholder="Bet Amount">
+            </div>
+
+            <div class="threshold-input-group">
+                <label>Threshold</label>
+                <input type="number" id="threshold" value="50" min="2" max="99" step="1">
+                <div class="range-info">
+                    <span>Min: 2</span>
+                    <span>Max: 99</span>
+                </div>
+            </div>
+
+            <div class="bet-options">
+                <div class="bet-option" data-bet="over">
+                    <div class="option-name">Over</div>
+                    <div class="multiplier" id="overMultiplier">1.98x</div>
+                </div>
+                <div class="bet-option" data-bet="under">
+                    <div class="option-name">Under</div>
+                    <div class="multiplier" id="underMultiplier">1.98x</div>
+                </div>
+            </div>
+
+            <div class="win-chance">
+                <span class="label">Win Chance</span>
+                <span class="value" id="winChance">49%</span>
+            </div>
+
+            <div class="potential-payout">
+                <span class="label">Potential Payout</span>
+                <span class="value" id="potentialPayout">₹19.80</span>
+            </div>
+
+            <button id="playBtn" class="play-btn" disabled>Roll Dice</button>
+        </div>
+
+        <div class="game-result" id="gameResult"></div>
+
+        <div style="margin-top: 20px;">
+            <h3 style="color: #9ca3af; margin-bottom: 10px;">Recent History</h3>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const gameSlug = 'dice-duel';
+        let selectedBet = null;
+        let isRolling = false;
+
+        // Bet option selection
+        document.querySelectorAll('.bet-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.bet-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedBet = option.dataset.bet;
+                updateCalculations();
+            });
+        });
+
+        // Update calculations
+        function updateCalculations() {
+            const betAmount = parseFloat(document.getElementById('betAmount').value) || 0;
+            const threshold = parseInt(document.getElementById('threshold').value) || 50;
+
+            // Win chance
+            let winChance = 0;
+            if (selectedBet === 'over') {
+                winChance = (100 - threshold) / 100;
+            } else if (selectedBet === 'under') {
+                winChance = (threshold - 1) / 100;
+            }
+
+            document.getElementById('winChance').textContent = (winChance * 100).toFixed(0) + '%';
+
+            // Multiplier (1% house edge)
+            let multiplier = 0;
+            if (selectedBet === 'over') {
+                multiplier = 99 / (100 - threshold);
+            } else if (selectedBet === 'under') {
+                multiplier = 99 / threshold;
+            }
+
+            document.getElementById('overMultiplier').textContent = (99 / (100 - threshold)).toFixed(2) + 'x';
+            document.getElementById('underMultiplier').textContent = (99 / threshold).toFixed(2) + 'x';
+
+            // Potential payout
+            const potentialPayout = betAmount * multiplier;
+            document.getElementById('potentialPayout').textContent = '₹' + potentialPayout.toFixed(2);
+
+            // Update play button
+            document.getElementById('playBtn').disabled = !selectedBet || isNaN(betAmount) || betAmount < 1 || isRolling;
+        }
+
+        document.getElementById('betAmount').addEventListener('input', updateCalculations);
+        document.getElementById('threshold').addEventListener('input', updateCalculations);
+
+        // Roll animation
+        async function rollDice(finalValue) {
+            const diceEl = document.getElementById('diceValue');
+            diceEl.classList.add('rolling');
+
+            const duration = 1500;
+            const startTime = Date.now();
+
+            return new Promise(resolve => {
+                const animate = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+
+                    // Random values during animation
+                    if (progress < 1) {
+                        diceEl.textContent = Math.floor(Math.random() * 100) + 1;
+                        requestAnimationFrame(animate);
+                    } else {
+                        diceEl.classList.remove('rolling');
+                        diceEl.textContent = finalValue;
+                        resolve();
+                    }
+                };
+
+                animate();
+            });
+        }
+
+        // Play game
+        document.getElementById('playBtn').addEventListener('click', async () => {
+            if (isRolling || !selectedBet) return;
+
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+            const threshold = parseInt(document.getElementById('threshold').value);
+
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+
+            if (isNaN(threshold) || threshold < 2 || threshold > 99) {
+                alert('Please enter a valid threshold (2-99)');
+                return;
+            }
+
+            isRolling = true;
+            updateCalculations();
+            document.getElementById('gameResult').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/play`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bet_amount: betAmount,
+                        threshold: threshold,
+                        bet_type: selectedBet
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Roll animation
+                    await rollDice(data.result.roll);
+
+                    // Show result
+                    showResult(data.result);
+                    loadHistory();
+                } else {
+                    alert(data.message || 'Failed to roll');
+                    isRolling = false;
+                    updateCalculations();
+                }
+            } catch (error) {
+                console.error('Error rolling:', error);
+                alert('Failed to roll');
+                isRolling = false;
+                updateCalculations();
+            }
+        });
+
+        // Show result
+        function showResult(result) {
+            const gameResult = document.getElementById('gameResult');
+            gameResult.style.display = 'block';
+
+            gameResult.innerHTML = `
+                <div style="font-size: 24px; margin: 10px 0;">
+                    Roll: <strong>${result.roll}</strong> (${result.bet_type} ${result.threshold})
+                </div>
+            `;
+
+            if (result.won) {
+                gameResult.className = 'game-result win';
+                gameResult.innerHTML += `
+                    <h2>🎉 You Won!</h2>
+                    <div class="result-amount win">+₹${result.profit.toFixed(2)}</div>
+                    <p>Multiplier: ${result.multiplier.toFixed(2)}x</p>
+                `;
+            } else {
+                gameResult.className = 'game-result lose';
+                gameResult.innerHTML += `
+                    <h2>😢 You Lost!</h2>
+                    <div class="result-amount lose">-₹${result.bet_amount.toFixed(2)}</div>
+                    <p>Roll was ${result.roll}</p>
+                `;
+            }
+
+            isRolling = false;
+            updateCalculations();
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/history`);
+                const data = await response.json();
+
+                if (data.success && data.history) {
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = data.history.slice(0, 10).map(bet => `
+                        <div class="history-item">
+                            <span class="roll">${bet.result?.roll || '?'}</span>
+                            <span style="color: #9ca3af;">${bet.result?.bet_type || '?'} ${bet.result?.threshold || '?'}</span>
+                            <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                ${bet.won ? '+' : '-'}₹${Math.abs(bet.profit || 0).toFixed(2)}
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Initialize
+        updateCalculations();
+        loadHistory();
+    </script>
+</body>
+
+</html>

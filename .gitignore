@@ -1,0 +1,37 @@
+# Environment
+.env
+.env.local
+.env.production
+
+# Vendor
+/vendor/
+
+# Logs
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# Win cards
+/storage/win_cards/*
+!/storage/win_cards/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Composer
+composer.lock
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Cache
+*.cache

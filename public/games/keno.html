@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keno - BetVibe</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .keno-container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .keno-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 6px;
+            margin: 20px 0;
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .keno-number {
+            aspect-ratio: 1;
+            background: linear-gradient(145deg, #2d2d44, #1a1a2e);
+            border: 2px solid #3d3d5c;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .keno-number:hover {
+            background: linear-gradient(145deg, #3d3d5c, #2d2d44);
+            border-color: #6366f1;
+        }
+
+        .keno-number.selected {
+            background: linear-gradient(145deg, #6366f1, #4f46e5);
+            border-color: #818cf8;
+        }
+
+        .keno-number.drawn {
+            background: linear-gradient(145deg, #10b981, #059669);
+            border-color: #34d399;
+        }
+
+        .keno-number.hit {
+            background: linear-gradient(145deg, #fbbf24, #f59e0b);
+            border-color: #fcd34d;
+            color: #000;
+        }
+
+        .keno-number.missed {
+            background: linear-gradient(145deg, #4b5563, #374151);
+            border-color: #6b7280;
+            opacity: 0.5;
+        }
+
+        .keno-number.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .bet-controls {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .bet-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-input-group input {
+            flex: 1;
+            padding: 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .selection-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .selected-count {
+            color: #6366f1;
+            font-weight: bold;
+        }
+
+        .potential-payout {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .quick-select {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quick-select-btn {
+            padding: 8px 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .quick-select-btn:hover {
+            background: #3d3d5c;
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .play-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .play-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+
+        .game-result {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .game-result.win {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            border: 2px solid #10b981;
+        }
+
+        .game-result.lose {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid #ef4444;
+        }
+
+        .result-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-amount.win {
+            color: #10b981;
+        }
+
+        .result-amount.lose {
+            color: #ef4444;
+        }
+
+        .drawn-numbers {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+
+        .drawn-number {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #10b981, #059669);
+            border-radius: 50%;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .history-item .hits {
+            color: #fbbf24;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="keno-container">
+        <h1>🎯 Keno</h1>
+
+        <div class="bet-controls">
+            <div class="bet-input-group">
+                <input type="number" id="betAmount" value="10" min="1" step="1" placeholder="Bet Amount">
+            </div>
+
+            <div class="selection-info">
+                <span>Selected: <span class="selected-count" id="selectedCount">0</span>/10</span>
+                <span>Potential: <span class="potential-payout" id="potentialPayout">₹0.00</span></span>
+            </div>
+
+            <div class="quick-select">
+                <button class="quick-select-btn" data-count="1">Pick 1</button>
+                <button class="quick-select-btn" data-count="3">Pick 3</button>
+                <button class="quick-select-btn" data-count="5">Pick 5</button>
+                <button class="quick-select-btn" data-count="7">Pick 7</button>
+                <button class="quick-select-btn" data-count="10">Pick 10</button>
+                <button class="quick-select-btn" id="clearBtn">Clear</button>
+            </div>
+
+            <button id="playBtn" class="play-btn" disabled>Play Keno</button>
+        </div>
+
+        <div class="keno-grid" id="kenoGrid"></div>
+
+        <div class="game-result" id="gameResult"></div>
+
+        <div style="margin-top: 20px;">
+            <h3 style="color: #9ca3af; margin-bottom: 10px;">Recent History</h3>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const gameSlug = 'keno';
+        let selectedNumbers = [];
+        let isPlaying = false;
+
+        // Payout table (hits -> multiplier)
+        const payoutTable = {
+            1: { 1: 3.8 },
+            2: { 1: 0, 2: 13 },
+            3: { 1: 0, 2: 1.5, 3: 42 },
+            4: { 1: 0, 2: 0.5, 3: 4, 4: 110 },
+            5: { 1: 0, 2: 0, 3: 1, 4: 15, 5: 700 },
+            6: { 1: 0, 2: 0, 3: 1, 4: 3, 5: 70, 6: 1500 },
+            7: { 1: 0, 2: 0, 3: 0.5, 4: 2, 5: 20, 6: 300, 7: 6000 },
+            8: { 1: 0, 2: 0, 3: 0, 4: 1, 5: 10, 6: 80, 7: 1000, 8: 10000 },
+            9: { 1: 0, 2: 0, 3: 0, 4: 0.5, 5: 5, 6: 40, 7: 300, 8: 4000, 9: 25000 },
+            10: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 2, 6: 20, 7: 150, 8: 1000, 9: 5000, 10: 100000 }
+        };
+
+        // Initialize grid
+        function initGrid() {
+            const grid = document.getElementById('kenoGrid');
+            grid.innerHTML = '';
+
+            for (let i = 1; i <= 40; i++) {
+                const number = document.createElement('div');
+                number.className = 'keno-number';
+                number.textContent = i;
+                number.dataset.number = i;
+                number.addEventListener('click', () => toggleNumber(i));
+                grid.appendChild(number);
+            }
+        }
+
+        // Toggle number selection
+        function toggleNumber(num) {
+            if (isPlaying) return;
+
+            const index = selectedNumbers.indexOf(num);
+            const numberEl = document.querySelector(`[data-number="${num}"]`);
+
+            if (index > -1) {
+                selectedNumbers.splice(index, 1);
+                numberEl.classList.remove('selected');
+            } else if (selectedNumbers.length < 10) {
+                selectedNumbers.push(num);
+                numberEl.classList.add('selected');
+            }
+
+            updateSelectionInfo();
+        }
+
+        // Update selection info
+        function updateSelectionInfo() {
+            document.getElementById('selectedCount').textContent = selectedNumbers.length;
+
+            const betAmount = parseFloat(document.getElementById('betAmount').value) || 0;
+            const potentialMultiplier = getPotentialMultiplier();
+            const potentialPayout = betAmount * potentialMultiplier;
+
+            document.getElementById('potentialPayout').textContent = '₹' + potentialPayout.toFixed(2);
+            document.getElementById('playBtn').disabled = selectedNumbers.length === 0 || isNaN(betAmount) || betAmount < 1 || isPlaying;
+        }
+
+        // Get potential multiplier (best case - all numbers hit)
+        function getPotentialMultiplier() {
+            if (selectedNumbers.length === 0) return 0;
+            const payouts = payoutTable[selectedNumbers.length];
+            return payouts[selectedNumbers.length] || 0;
+        }
+
+        // Quick select buttons
+        document.querySelectorAll('.quick-select-btn[data-count]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (isPlaying) return;
+
+                clearSelection();
+                const count = parseInt(btn.dataset.count);
+                const available = Array.from({ length: 40 }, (_, i) => i + 1);
+
+                // Shuffle and pick
+                for (let i = available.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [available[i], available[j]] = [available[j], available[i]];
+                }
+
+                selectedNumbers = available.slice(0, count);
+                selectedNumbers.forEach(num => {
+                    document.querySelector(`[data-number="${num}"]`).classList.add('selected');
+                });
+
+                updateSelectionInfo();
+            });
+        });
+
+        // Clear selection
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            if (isPlaying) return;
+            clearSelection();
+        });
+
+        function clearSelection() {
+            selectedNumbers = [];
+            document.querySelectorAll('.keno-number').forEach(el => {
+                el.classList.remove('selected', 'drawn', 'hit', 'missed');
+            });
+            updateSelectionInfo();
+        }
+
+        // Bet amount input
+        document.getElementById('betAmount').addEventListener('input', updateSelectionInfo);
+
+        // Play game
+        document.getElementById('playBtn').addEventListener('click', async () => {
+            if (isPlaying || selectedNumbers.length === 0) return;
+
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+
+            isPlaying = true;
+            updateSelectionInfo();
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/play`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bet_amount: betAmount,
+                        selected_numbers: selectedNumbers
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResult(data.result);
+                    loadHistory();
+                } else {
+                    alert(data.message || 'Failed to play game');
+                    isPlaying = false;
+                    updateSelectionInfo();
+                }
+            } catch (error) {
+                console.error('Error playing game:', error);
+                alert('Failed to play game');
+                isPlaying = false;
+                updateSelectionInfo();
+            }
+        });
+
+        // Show result
+        function showResult(result) {
+            const gameResult = document.getElementById('gameResult');
+            const drawnNumbers = result.drawn_numbers || [];
+            const hits = result.hits || 0;
+
+            // Update grid
+            document.querySelectorAll('.keno-number').forEach(el => {
+                const num = parseInt(el.dataset.number);
+                el.classList.remove('selected', 'drawn', 'hit', 'missed');
+
+                if (drawnNumbers.includes(num)) {
+                    if (selectedNumbers.includes(num)) {
+                        el.classList.add('hit');
+                    } else {
+                        el.classList.add('drawn');
+                    }
+                } else if (selectedNumbers.includes(num)) {
+                    el.classList.add('missed');
+                }
+            });
+
+            gameResult.style.display = 'block';
+
+            // Drawn numbers display
+            const drawnHtml = `
+                <div class="drawn-numbers">
+                    ${drawnNumbers.map(n => `<div class="drawn-number">${n}</div>`).join('')}
+                </div>
+            `;
+
+            if (result.won) {
+                gameResult.className = 'game-result win';
+                gameResult.innerHTML = `
+                    <h2>🎉 You Won!</h2>
+                    ${drawnHtml}
+                    <p>You hit <strong>${hits}</strong> out of ${selectedNumbers.length} numbers</p>
+                    <div class="result-amount win">+₹${result.profit.toFixed(2)}</div>
+                    <p>Multiplier: ${result.multiplier.toFixed(2)}x</p>
+                `;
+            } else {
+                gameResult.className = 'game-result lose';
+                gameResult.innerHTML = `
+                    <h2>😢 You Lost!</h2>
+                    ${drawnHtml}
+                    <p>You hit <strong>${hits}</strong> out of ${selectedNumbers.length} numbers</p>
+                    <div class="result-amount lose">-₹${result.bet_amount.toFixed(2)}</div>
+                    <p>Need at least ${getMinHits(selectedNumbers.length)} hits to win</p>
+                `;
+            }
+
+            isPlaying = false;
+            updateSelectionInfo();
+        }
+
+        // Get minimum hits needed to win
+        function getMinHits(picks) {
+            const payouts = payoutTable[picks];
+            for (let i = picks; i >= 1; i--) {
+                if (payouts[i] > 0) return i;
+            }
+            return picks;
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/history`);
+                const data = await response.json();
+
+                if (data.success && data.history) {
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = data.history.slice(0, 10).map(bet => `
+                        <div class="history-item">
+                            <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                ${bet.won ? '✓' : '✗'} ${bet.result?.hits || 0}/${bet.result?.selected_count || 0} hits
+                            </span>
+                            <span class="hits">${bet.result?.multiplier?.toFixed(2) || '0.00'}x</span>
+                            <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                ${bet.won ? '+' : '-'}₹${Math.abs(bet.profit || 0).toFixed(2)}
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Initialize
+        initGrid();
+        loadHistory();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,8 @@
+/**
+ * BetVibe Styles — Legacy Compatibility
+ * All design tokens and components are in app.css
+ * This file imports app.css and adds any page-specific overrides.
+ */
+@import url('./app.css');
+
+/* Page-specific overrides go below */

@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plinko - BetVibe</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .plinko-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .plinko-board {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plinko-canvas {
+            width: 100%;
+            height: 400px;
+            display: block;
+        }
+
+        .bet-controls {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .bet-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-input-group input {
+            flex: 1;
+            padding: 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .risk-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .risk-btn {
+            flex: 1;
+            padding: 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .risk-btn:hover {
+            background: #3d3d5c;
+        }
+
+        .risk-btn.active {
+            background: #6366f1;
+            border-color: #818cf8;
+        }
+
+        .risk-btn.low.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #34d399;
+        }
+
+        .risk-btn.medium.active {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-color: #fbbf24;
+        }
+
+        .risk-btn.high.active {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-color: #f87171;
+        }
+
+        .multiplier-display {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .multiplier-item {
+            text-align: center;
+        }
+
+        .multiplier-item .label {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .multiplier-item .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .play-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .play-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+
+        .game-result {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .game-result.win {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            border: 2px solid #10b981;
+        }
+
+        .game-result.lose {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid #ef4444;
+        }
+
+        .result-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-amount.win {
+            color: #10b981;
+        }
+
+        .result-amount.lose {
+            color: #ef4444;
+        }
+
+        .result-slot {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .history-item .slot {
+            color: #6366f1;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="plinko-container">
+        <h1>🎱 Plinko</h1>
+
+        <div class="bet-controls">
+            <div class="bet-input-group">
+                <input type="number" id="betAmount" value="10" min="1" step="1" placeholder="Bet Amount">
+            </div>
+
+            <div class="risk-selector">
+                <button class="risk-btn low active" data-risk="low">Low</button>
+                <button class="risk-btn medium" data-risk="medium">Medium</button>
+                <button class="risk-btn high" data-risk="high">High</button>
+            </div>
+
+            <div class="multiplier-display">
+                <div class="multiplier-item">
+                    <div class="label">Min</div>
+                    <div class="value" id="minMultiplier">0.2x</div>
+                </div>
+                <div class="multiplier-item">
+                    <div class="label">Max</div>
+                    <div class="value" id="maxMultiplier">50x</div>
+                </div>
+            </div>
+
+            <button id="playBtn" class="play-btn">Drop Ball</button>
+        </div>
+
+        <div class="plinko-board">
+            <canvas id="plinkoCanvas" class="plinko-canvas"></canvas>
+        </div>
+
+        <div class="game-result" id="gameResult"></div>
+
+        <div style="margin-top: 20px;">
+            <h3 style="color: #9ca3af; margin-bottom: 10px;">Recent History</h3>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const gameSlug = 'plinko';
+        let selectedRisk = 'low';
+        let isDropping = false;
+        let canvas, ctx;
+        let balls = [];
+        let pegs = [];
+        let slots = [];
+
+        // Multiplier distributions
+        const multipliers = {
+            low: [0.5, 0.7, 1.0, 1.0, 1.0, 1.5, 1.0, 1.0, 1.0, 0.7, 0.5, 0.3, 0.2],
+            medium: [3, 1.5, 1.0, 0.5, 0.3, 0.2, 0.2, 0.3, 0.5, 1.0, 1.5, 3, 10],
+            high: [1000, 10, 3, 1, 0.5, 0.3, 0.2, 0.3, 0.5, 1, 3, 10, 1000]
+        };
+
+        // Risk selector
+        document.querySelectorAll('.risk-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.risk-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedRisk = btn.dataset.risk;
+                updateMultiplierDisplay();
+            });
+        });
+
+        // Update multiplier display
+        function updateMultiplierDisplay() {
+            const riskMultipliers = multipliers[selectedRisk];
+            document.getElementById('minMultiplier').textContent = Math.min(...riskMultipliers).toFixed(1) + 'x';
+            document.getElementById('maxMultiplier').textContent = Math.max(...riskMultipliers).toFixed(0) + 'x';
+        }
+
+        // Initialize canvas
+        function initCanvas() {
+            canvas = document.getElementById('plinkoCanvas');
+            ctx = canvas.getContext('2d');
+
+            // Set canvas size
+            canvas.width = canvas.offsetWidth * 2;
+            canvas.height = canvas.offsetHeight * 2;
+            ctx.scale(2, 2);
+
+            createPegs();
+            createSlots();
+            draw();
+        }
+
+        // Create pegs
+        function createPegs() {
+            pegs = [];
+            const rows = 12;
+            const spacing = canvas.offsetWidth / 14;
+
+            for (let row = 0; row < rows; row++) {
+                const pegsInRow = row + 2;
+                const rowY = 40 + row * spacing;
+
+                for (let col = 0; col < pegsInRow; col++) {
+                    const x = (canvas.offsetWidth - (pegsInRow - 1) * spacing) / 2 + col * spacing;
+                    pegs.push({ x, y: rowY, radius: 4 });
+                }
+            }
+        }
+
+        // Create slots
+        function createSlots() {
+            slots = [];
+            const slotCount = 13;
+            const spacing = canvas.offsetWidth / slotCount;
+            const riskMultipliers = multipliers[selectedRisk];
+
+            for (let i = 0; i < slotCount; i++) {
+                slots.push({
+                    x: spacing / 2 + i * spacing,
+                    y: canvas.offsetHeight - 30,
+                    width: spacing - 4,
+                    height: 25,
+                    multiplier: riskMultipliers[i]
+                });
+            }
+        }
+
+        // Draw
+        function draw() {
+            ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+
+            // Draw slots
+            slots.forEach(slot => {
+                const gradient = ctx.createLinearGradient(slot.x, slot.y, slot.x, slot.y + slot.height);
+                if (slot.multiplier >= 10) {
+                    gradient.addColorStop(0, '#ef4444');
+                    gradient.addColorStop(1, '#dc2626');
+                } else if (slot.multiplier >= 2) {
+                    gradient.addColorStop(0, '#f59e0b');
+                    gradient.addColorStop(1, '#d97706');
+                } else if (slot.multiplier >= 1) {
+                    gradient.addColorStop(0, '#10b981');
+                    gradient.addColorStop(1, '#059669');
+                } else {
+                    gradient.addColorStop(0, '#6b7280');
+                    gradient.addColorStop(1, '#4b5563');
+                }
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(slot.x - slot.width / 2, slot.y, slot.width, slot.height);
+
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(slot.multiplier + 'x', slot.x, slot.y + 16);
+            });
+
+            // Draw pegs
+            pegs.forEach(peg => {
+                ctx.beginPath();
+                ctx.arc(peg.x, peg.y, peg.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#6366f1';
+                ctx.fill();
+            });
+
+            // Draw balls
+            balls.forEach(ball => {
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = '#fbbf24';
+                ctx.fill();
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        // Drop ball
+        function dropBall() {
+            const ball = {
+                x: canvas.offsetWidth / 2,
+                y: 10,
+                vx: (Math.random() - 0.5) * 2,
+                vy: 0,
+                radius: 6,
+                active: true
+            };
+            balls.push(ball);
+        }
+
+        // Update balls
+        function updateBalls() {
+            balls.forEach(ball => {
+                if (!ball.active) return;
+
+                // Gravity
+                ball.vy += 0.3;
+                ball.x += ball.vx;
+                ball.y += ball.vy;
+
+                // Bounce off walls
+                if (ball.x < ball.radius || ball.x > canvas.offsetWidth - ball.radius) {
+                    ball.vx *= -0.5;
+                    ball.x = Math.max(ball.radius, Math.min(canvas.offsetWidth - ball.radius, ball.x));
+                }
+
+                // Bounce off pegs
+                pegs.forEach(peg => {
+                    const dx = ball.x - peg.x;
+                    const dy = ball.y - peg.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < ball.radius + peg.radius) {
+                        const angle = Math.atan2(dy, dx);
+                        ball.vx = Math.cos(angle) * 3;
+                        ball.vy = Math.sin(angle) * 3;
+                        ball.x = peg.x + Math.cos(angle) * (ball.radius + peg.radius + 1);
+                        ball.y = peg.y + Math.sin(angle) * (ball.radius + peg.radius + 1);
+                    }
+                });
+
+                // Check slots
+                slots.forEach((slot, index) => {
+                    if (ball.y > slot.y && ball.y < slot.y + slot.height &&
+                        ball.x > slot.x - slot.width / 2 && ball.x < slot.x + slot.width / 2) {
+                        ball.active = false;
+                        ball.slot = index;
+                        ball.multiplier = slot.multiplier;
+                    }
+                });
+            });
+
+            // Remove inactive balls after delay
+            balls = balls.filter(ball => ball.active || (Date.now() - ball.inactiveTime < 1000));
+        }
+
+        // Animation loop
+        function animate() {
+            updateBalls();
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        // Play game
+        document.getElementById('playBtn').addEventListener('click', async () => {
+            if (isDropping) return;
+
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+
+            isDropping = true;
+            document.getElementById('playBtn').disabled = true;
+
+            // Clear previous balls
+            balls = [];
+
+            // Drop ball
+            dropBall();
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/play`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bet_amount: betAmount,
+                        risk: selectedRisk
+                    })
+                });
+
+                const data = await response.json();
+
+                // Wait for ball to land
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                if (data.success) {
+                    showResult(data.result);
+                    loadHistory();
+                } else {
+                    alert(data.message || 'Failed to play game');
+                    isDropping = false;
+                    document.getElementById('playBtn').disabled = false;
+                }
+            } catch (error) {
+                console.error('Error playing game:', error);
+                alert('Failed to play game');
+                isDropping = false;
+                document.getElementById('playBtn').disabled = false;
+            }
+        });
+
+        // Show result
+        function showResult(result) {
+            const gameResult = document.getElementById('gameResult');
+            gameResult.style.display = 'block';
+
+            gameResult.innerHTML = `
+                <div class="result-slot">Landed in slot ${result.slot + 1}</div>
+                <div style="font-size: 18px; color: #9ca3af;">Multiplier: ${result.multiplier.toFixed(1)}x</div>
+            `;
+
+            if (result.won) {
+                gameResult.className = 'game-result win';
+                gameResult.innerHTML += `
+                    <h2>🎉 You Won!</h2>
+                    <div class="result-amount win">+₹${result.profit.toFixed(2)}</div>
+                `;
+            } else {
+                gameResult.className = 'game-result lose';
+                gameResult.innerHTML += `
+                    <h2>😢 You Lost!</h2>
+                    <div class="result-amount lose">-₹${result.bet_amount.toFixed(2)}</div>
+                `;
+            }
+
+            isDropping = false;
+            document.getElementById('playBtn').disabled = false;
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/history`);
+                const data = await response.json();
+
+                if (data.success && data.history) {
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = data.history.slice(0, 10).map(bet => `
+                        <div class="history-item">
+                            <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                ${bet.won ? '✓' : '✗'} Slot ${bet.result?.slot + 1 || '?'}
+                            </span>
+                            <span class="slot">${bet.result?.multiplier?.toFixed(1) || '0.0'}x</span>
+                            <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                ${bet.won ? '+' : '-'}₹${Math.abs(bet.profit || 0).toFixed(2)}
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            initCanvas();
+            animate();
+            loadHistory();
+        });
+
+        window.addEventListener('resize', () => {
+            initCanvas();
+        });
+    </script>
+</body>
+
+</html>

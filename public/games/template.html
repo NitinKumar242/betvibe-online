@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetVibe - {{GAME_NAME}}</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .game-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .game-header h1 {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 2.5rem;
+        }
+
+        .game-area {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .bet-controls {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .bet-input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .bet-input label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #a0a0a0;
+        }
+
+        .bet-input input,
+        .bet-input select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .bet-input input:focus,
+        .bet-input select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .play-btn {
+            padding: 0.75rem 2rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .play-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .game-display {
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-display {
+            text-align: center;
+        }
+
+        .result-display .multiplier {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-display .payout {
+            font-size: 1.5rem;
+            color: #4ade80;
+        }
+
+        .result-display .loss {
+            color: #f87171;
+        }
+
+        .history {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 1.5rem;
+        }
+
+        .history h3 {
+            margin-top: 0;
+            color: #a0a0a0;
+        }
+
+        .history-list {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .history-item {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .history-item.win {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .history-item.loss {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+        }
+
+        .balance-display {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+        }
+
+        .balance-display span {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .error-message {
+            background: rgba(248, 113, 113, 0.2);
+            color: #f87171;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>{{GAME_NAME}}</h1>
+            <p>{{GAME_DESCRIPTION}}</p>
+        </div>
+
+        <div class="balance-display">
+            Balance: <span id="balance">0.00</span> INR
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="game-area">
+            <div class="bet-controls">
+                {{BET_CONTROLS}}
+            </div>
+
+            <button class="play-btn" id="playBtn" onclick="playGame()">Play</button>
+
+            <div class="game-display" id="gameDisplay">
+                <div class="result-display">
+                    <p>Place your bet and click Play</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="history">
+            <h3>Recent Results</h3>
+            <div class="history-list" id="historyList">
+                <p style="color: #a0a0a0;">No recent results</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GAME_SLUG = '{{GAME_SLUG}}';
+        let balance = 0;
+        let history = [];
+
+        // Load balance on page load
+        async function loadBalance() {
+            try {
+                const response = await fetch('/api/wallet/balance');
+                const data = await response.json();
+                if (data.success) {
+                    balance = data.balance;
+                    document.getElementById('balance').textContent = balance.toFixed(2);
+                }
+            } catch (error) {
+                console.error('Failed to load balance:', error);
+            }
+        }
+
+        // Play game
+        async function playGame() {
+            const playBtn = document.getElementById('playBtn');
+            const errorMessage = document.getElementById('errorMessage');
+
+            playBtn.disabled = true;
+            errorMessage.classList.remove('show');
+
+            try {
+                const betData = getBetData();
+                const betAmount = parseFloat(document.getElementById('betAmount').value);
+
+                if (isNaN(betAmount) || betAmount <= 0) {
+                    throw new Error('Invalid bet amount');
+                }
+
+                const response = await fetch(`/api/games/${GAME_SLUG}/play`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        bet_amount: betAmount,
+                        bet_data: betData
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayResult(data.data);
+                    balance = data.data.new_balance || balance;
+                    document.getElementById('balance').textContent = balance.toFixed(2);
+                    addToHistory(data.data);
+                } else {
+                    throw new Error(data.error || 'Game failed');
+                }
+            } catch (error) {
+                errorMessage.textContent = error.message;
+                errorMessage.classList.add('show');
+            } finally {
+                playBtn.disabled = false;
+            }
+        }
+
+        // Get bet data (override in specific game files)
+        function getBetData() {
+            return {};
+        }
+
+        // Display result (override in specific game files)
+        function displayResult(result) {
+            const display = document.getElementById('gameDisplay');
+            const multiplier = result.multiplier || 0;
+            const payout = result.payout || 0;
+            const won = result.won || false;
+
+            display.innerHTML = `
+                <div class="result-display">
+                    <div class="multiplier" style="color: ${won ? '#4ade80' : '#f87171'}">
+                        ${multiplier.toFixed(2)}x
+                    </div>
+                    <div class="${won ? 'payout' : 'loss'}">
+                        ${won ? '+' : ''}${payout.toFixed(2)} INR
+                    </div>
+                </div>
+            `;
+        }
+
+        // Add to history
+        function addToHistory(result) {
+            history.unshift(result);
+            if (history.length > 10) {
+                history.pop();
+            }
+            updateHistoryDisplay();
+        }
+
+        // Update history display
+        function updateHistoryDisplay() {
+            const list = document.getElementById('historyList');
+
+            if (history.length === 0) {
+                list.innerHTML = '<p style="color: #a0a0a0;">No recent results</p>';
+                return;
+            }
+
+            list.innerHTML = history.map(item => `
+                <div class="history-item ${item.won ? 'win' : 'loss'}">
+                    ${item.multiplier.toFixed(2)}x
+                </div>
+            `).join('');
+        }
+
+        // Initialize
+        loadBalance();
+    </script>
+</body>
+
+</html>

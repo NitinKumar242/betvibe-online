@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spin Wheel - BetVibe</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .wheel-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .wheel-display {
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+            border-radius: 20px;
+            padding: 30px 20px;
+            margin: 20px 0;
+            text-align: center;
+            border: 4px solid #6366f1;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .wheel {
+            width: 280px;
+            height: 280px;
+            margin: 0 auto;
+            border-radius: 50%;
+            background: conic-gradient(#ef4444 0deg 6.92deg,
+                    #f97316 6.92deg 13.84deg,
+                    #fbbf24 13.84deg 20.76deg,
+                    #10b981 20.76deg 27.68deg,
+                    #6366f1 27.68deg 34.6deg,
+                    #8b5cf6 34.6deg 41.52deg,
+                    #ec4899 41.52deg 48.44deg,
+                    #ef4444 48.44deg 55.36deg,
+                    #f97316 55.36deg 62.28deg,
+                    #fbbf24 62.28deg 69.2deg,
+                    #10b981 69.2deg 76.12deg,
+                    #6366f1 76.12deg 83.04deg,
+                    #8b5cf6 83.04deg 89.96deg,
+                    #ec4899 89.96deg 96.88deg,
+                    #ef4444 96.88deg 103.8deg,
+                    #f97316 103.8deg 110.72deg,
+                    #fbbf24 110.72deg 117.64deg,
+                    #10b981 117.64deg 124.56deg,
+                    #6366f1 124.56deg 131.48deg,
+                    #8b5cf6 131.48deg 138.4deg,
+                    #ec4899 138.4deg 145.32deg,
+                    #ef4444 145.32deg 152.24deg,
+                    #f97316 152.24deg 159.16deg,
+                    #fbbf24 159.16deg 166.08deg,
+                    #10b981 166.08deg 173deg,
+                    #6366f1 173deg 179.92deg,
+                    #8b5cf6 179.92deg 186.84deg,
+                    #ec4899 186.84deg 193.76deg,
+                    #ef4444 193.76deg 200.68deg,
+                    #f97316 200.68deg 207.6deg,
+                    #fbbf24 207.6deg 214.52deg,
+                    #10b981 214.52deg 221.44deg,
+                    #6366f1 221.44deg 228.36deg,
+                    #8b5cf6 228.36deg 235.28deg,
+                    #ec4899 235.28deg 242.2deg,
+                    #ef4444 242.2deg 249.12deg,
+                    #f97316 249.12deg 256.04deg,
+                    #fbbf24 256.04deg 262.96deg,
+                    #10b981 262.96deg 269.88deg,
+                    #6366f1 269.88deg 276.8deg,
+                    #8b5cf6 276.8deg 283.72deg,
+                    #ec4899 283.72deg 290.64deg,
+                    #ef4444 290.64deg 297.56deg,
+                    #f97316 297.56deg 304.48deg,
+                    #fbbf24 304.48deg 311.4deg,
+                    #10b981 311.4deg 318.32deg,
+                    #6366f1 318.32deg 325.24deg,
+                    #8b5cf6 325.24deg 332.16deg,
+                    #ec4899 332.16deg 339.08deg,
+                    #ef4444 339.08deg 346deg,
+                    #f97316 346deg 352.92deg,
+                    #fbbf24 352.92deg 360deg);
+            border: 8px solid #3d3d5c;
+            position: relative;
+            transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99);
+        }
+
+        .wheel::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: #3d3d5c;
+            border-radius: 50%;
+            border: 4px solid #6366f1;
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #fbbf24;
+            z-index: 10;
+        }
+
+        .result-display {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .result-multiplier {
+            font-size: 36px;
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .bet-controls {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .bet-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-input-group input {
+            flex: 1;
+            padding: 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .multiplier-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .multiplier-info .label {
+            color: #9ca3af;
+        }
+
+        .multiplier-info .value {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .play-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .play-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+
+        .game-result {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .game-result.win {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            border: 2px solid #10b981;
+        }
+
+        .game-result.lose {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid #ef4444;
+        }
+
+        .result-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-amount.win {
+            color: #10b981;
+        }
+
+        .result-amount.lose {
+            color: #ef4444;
+        }
+
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .history-item .multiplier {
+            color: #6366f1;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wheel-container">
+        <h1>🎡 Spin Wheel</h1>
+
+        <div class="wheel-display">
+            <div class="wheel" id="wheel">
+                <div class="wheel-pointer"></div>
+            </div>
+            <div class="result-display">
+                <div class="result-multiplier" id="resultMultiplier">0.0x</div>
+                <div style="color: #9ca3af; font-size: 14px; margin-top: 5px;">Result</div>
+            </div>
+        </div>
+
+        <div class="bet-controls">
+            <div class="bet-input-group">
+                <input type="number" id="betAmount" value="10" min="1" step="1" placeholder="Bet Amount">
+            </div>
+
+            <div class="multiplier-info">
+                <span class="label">Min Multiplier</span>
+                <span class="value">0.2x</span>
+            </div>
+            <div class="multiplier-info">
+                <span class="label">Max Multiplier</span>
+                <span class="value">50x</span>
+            </div>
+            <div class="multiplier-info">
+                <span class="label">Expected Value</span>
+                <span class="value">~0.79x</span>
+            </div>
+
+            <button id="playBtn" class="play-btn" disabled>Spin Wheel</button>
+        </div>
+
+        <div class="game-result" id="gameResult"></div>
+
+        <div style="margin-top: 20px;">
+            <h3 style="color: #9ca3af; margin-bottom: 10px;">Recent History</h3>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const gameSlug = 'spin-wheel';
+        let isSpinning = false;
+
+        // Update play button state
+        function updatePlayButton() {
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+            document.getElementById('playBtn').disabled = isNaN(betAmount) || betAmount < 1 || isSpinning;
+        }
+
+        document.getElementById('betAmount').addEventListener('input', updatePlayButton);
+
+        // Spin wheel
+        function spinWheel(finalMultiplier) {
+            const wheel = document.getElementById('wheel');
+            const spins = 5 + Math.random() * 3;
+            const rotation = spins * 360 + Math.random() * 360;
+            wheel.style.transform = `rotate(${rotation}deg)`;
+
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    resolve();
+                }, 4000);
+            });
+        }
+
+        // Play game
+        document.getElementById('playBtn').addEventListener('click', async () => {
+            if (isSpinning) return;
+
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+
+            isSpinning = true;
+            updatePlayButton();
+            document.getElementById('gameResult').style.display = 'none';
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/play`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bet_amount: betAmount
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Spin animation
+                    await spinWheel(data.result.multiplier);
+
+                    // Update result display
+                    document.getElementById('resultMultiplier').textContent = data.result.multiplier.toFixed(1) + 'x';
+
+                    // Show result
+                    showResult(data.result);
+                    loadHistory();
+                } else {
+                    alert(data.message || 'Failed to spin');
+                    isSpinning = false;
+                    updatePlayButton();
+                }
+            } catch (error) {
+                console.error('Error spinning:', error);
+                alert('Failed to spin');
+                isSpinning = false;
+                updatePlayButton();
+            }
+        });
+
+        // Show result
+        function showResult(result) {
+            const gameResult = document.getElementById('gameResult');
+            gameResult.style.display = 'block';
+
+            if (result.won) {
+                gameResult.className = 'game-result win';
+                gameResult.innerHTML = `
+                    <h2>🎉 You Won!</h2>
+                    <div class="result-amount win">+₹${result.profit.toFixed(2)}</div>
+                    <p>Multiplier: ${result.multiplier.toFixed(1)}x</p>
+                `;
+            } else {
+                gameResult.className = 'game-result lose';
+                gameResult.innerHTML += `
+                    <h2>😢 You Lost!</h2>
+                    <div class="result-amount lose">-₹${result.bet_amount.toFixed(2)}</div>
+                    <p>Multiplier was ${result.multiplier.toFixed(1)}x</p>
+                `;
+            }
+
+            isSpinning = false;
+            updatePlayButton();
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/history`);
+                const data = await response.json();
+
+                if (data.success && data.history) {
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = data.history.slice(0, 10).map(bet => `
+                        <div class="history-item">
+                            <span class="multiplier">${bet.result?.multiplier?.toFixed(1) || '?'}x</span>
+                            <span style="color: ${bet.won ? '#10b981' : '#ef4444'};">
+                                ${bet.won ? '+' : '-'}₹${Math.abs(bet.profit || 0).toFixed(2)}
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Initialize
+        updatePlayButton();
+        loadHistory();
+    </script>
+</body>
+
+</html>

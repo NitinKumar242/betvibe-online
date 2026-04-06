@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Parity - BetVibe</title>
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <style>
+        .parity-container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .timer-display {
+            background: linear-gradient(180deg, #1a1a2e 0%, #2d2d44 100%);
+            border-radius: 20px;
+            padding: 30px 20px;
+            margin: 20px 0;
+            text-align: center;
+            border: 4px solid #6366f1;
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .timer-value {
+            font-size: 64px;
+            font-weight: bold;
+            color: #fff;
+            font-family: monospace;
+        }
+
+        .timer-label {
+            color: #9ca3af;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .round-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding: 10px;
+            background: #2d2d44;
+            border-radius: 8px;
+        }
+
+        .round-info span {
+            color: #9ca3af;
+        }
+
+        .round-info strong {
+            color: #fff;
+        }
+
+        .bet-controls {
+            background: #1a1a2e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .bet-input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-input-group input {
+            flex: 1;
+            padding: 12px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .parity-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .parity-option {
+            padding: 20px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .parity-option:hover {
+            background: #3d3d5c;
+        }
+
+        .parity-option.selected {
+            background: #6366f1;
+            border-color: #818cf8;
+        }
+
+        .parity-option .option-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .parity-option .multiplier {
+            font-size: 14px;
+            color: #9ca3af;
+            margin-top: 5px;
+        }
+
+        .number-options {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .number-option {
+            padding: 15px;
+            background: #2d2d44;
+            border: 2px solid #3d3d5c;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .number-option:hover {
+            background: #3d3d5c;
+        }
+
+        .number-option.selected {
+            background: #6366f1;
+            border-color: #818cf8;
+        }
+
+        .number-option .multiplier {
+            font-size: 10px;
+            color: #9ca3af;
+            margin-top: 2px;
+        }
+
+        .bet-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .bet-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+        }
+
+        .bet-btn:disabled {
+            background: #4b5563;
+            cursor: not-allowed;
+        }
+
+        .game-result {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .game-result.win {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+            border: 2px solid #10b981;
+        }
+
+        .game-result.lose {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+            border: 2px solid #ef4444;
+        }
+
+        .result-number {
+            font-size: 64px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-number.even {
+            color: #6366f1;
+        }
+
+        .result-number.odd {
+            color: #f59e0b;
+        }
+
+        .result-number.house {
+            color: #ef4444;
+        }
+
+        .result-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .result-amount.win {
+            color: #10b981;
+        }
+
+        .result-amount.lose {
+            color: #ef4444;
+        }
+
+        .history-list {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .history-item {
+            min-width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .history-item.even {
+            background: linear-gradient(145deg, #6366f1, #4f46e5);
+        }
+
+        .history-item.odd {
+            background: linear-gradient(145deg, #f59e0b, #d97706);
+        }
+
+        .history-item.house {
+            background: linear-gradient(145deg, #ef4444, #dc2626);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="parity-container">
+        <h1>⚡ Fast Parity</h1>
+
+        <div class="timer-display">
+            <div class="timer-value" id="timerValue">01:00</div>
+            <div class="timer-label">Time Remaining</div>
+            <div class="round-info">
+                <span>Round: <strong id="roundId">-</strong></span>
+                <span>Status: <strong id="roundStatus">Loading...</strong></span>
+            </div>
+        </div>
+
+        <div class="bet-controls">
+            <div class="bet-input-group">
+                <input type="number" id="betAmount" value="10" min="1" step="1" placeholder="Bet Amount">
+            </div>
+
+            <div class="parity-options">
+                <div class="parity-option" data-bet="even">
+                    <div class="option-name">Even</div>
+                    <div class="multiplier">1.9x</div>
+                </div>
+                <div class="parity-option" data-bet="odd">
+                    <div class="option-name">Odd</div>
+                    <div class="multiplier">1.9x</div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 10px; color: #9ca3af; font-size: 12px;">Or pick a number:</div>
+
+            <div class="number-options" id="numberOptions"></div>
+
+            <button id="betBtn" class="bet-btn" disabled>Place Bet</button>
+        </div>
+
+        <div class="game-result" id="gameResult"></div>
+
+        <div style="margin-top: 20px;">
+            <h3 style="color: #9ca3af; margin-bottom: 10px;">Recent Results</h3>
+            <div class="history-list" id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        const gameSlug = 'fast-parity';
+        let selectedBet = null;
+        let selectedNumber = null;
+        let currentRound = null;
+        let timerInterval = null;
+
+        // Initialize number options
+        function initNumberOptions() {
+            const container = document.getElementById('numberOptions');
+            container.innerHTML = '';
+
+            for (let i = 0; i <= 9; i++) {
+                const option = document.createElement('div');
+                option.className = 'number-option';
+                option.dataset.number = i;
+                option.innerHTML = `
+                    ${i}
+                    <div class="multiplier">8.5x</div>
+                `;
+                option.addEventListener('click', () => selectNumber(i));
+                container.appendChild(option);
+            }
+        }
+
+        // Select parity option
+        document.querySelectorAll('.parity-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.parity-option').forEach(o => o.classList.remove('selected'));
+                document.querySelectorAll('.number-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+                selectedBet = option.dataset.bet;
+                selectedNumber = null;
+                updateBetButton();
+            });
+        });
+
+        // Select number
+        function selectNumber(num) {
+            document.querySelectorAll('.parity-option').forEach(o => o.classList.remove('selected'));
+            document.querySelectorAll('.number-option').forEach(o => o.classList.remove('selected'));
+            document.querySelector(`[data-number="${num}"]`).classList.add('selected');
+            selectedBet = 'number';
+            selectedNumber = num;
+            updateBetButton();
+        }
+
+        // Update bet button state
+        function updateBetButton() {
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+            const canBet = currentRound && currentRound.status === 'betting' && selectedBet && !isNaN(betAmount) && betAmount >= 1;
+            document.getElementById('betBtn').disabled = !canBet;
+        }
+
+        document.getElementById('betAmount').addEventListener('input', updateBetButton);
+
+        // Format time
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Load current round
+        async function loadCurrentRound() {
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/current-round`);
+                const data = await response.json();
+
+                if (data.success && data.round) {
+                    currentRound = data.round;
+                    updateRoundUI();
+                }
+            } catch (error) {
+                console.error('Error loading round:', error);
+            }
+        }
+
+        // Update round UI
+        function updateRoundUI() {
+            if (!currentRound) return;
+
+            document.getElementById('roundId').textContent = currentRound.id || '-';
+            document.getElementById('roundStatus').textContent = currentRound.status || 'Loading...';
+
+            // Update timer
+            if (currentRound.ends_at) {
+                const endTime = new Date(currentRound.ends_at);
+                const now = new Date();
+                const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+                document.getElementById('timerValue').textContent = formatTime(remaining);
+            }
+
+            updateBetButton();
+        }
+
+        // Start timer
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+
+            timerInterval = setInterval(() => {
+                if (currentRound && currentRound.ends_at) {
+                    const endTime = new Date(currentRound.ends_at);
+                    const now = new Date();
+                    const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
+                    document.getElementById('timerValue').textContent = formatTime(remaining);
+
+                    if (remaining <= 0) {
+                        loadCurrentRound();
+                    }
+                }
+            }, 1000);
+        }
+
+        // Place bet
+        document.getElementById('betBtn').addEventListener('click', async () => {
+            if (!selectedBet || !currentRound || currentRound.status !== 'betting') return;
+
+            const betAmount = parseFloat(document.getElementById('betAmount').value);
+
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount');
+                return;
+            }
+
+            const betData = selectedBet === 'number' ? { number: selectedNumber } : { type: selectedBet };
+
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/bet`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        bet_amount: betAmount,
+                        round_id: currentRound.id,
+                        bet_data: betData
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Bet placed successfully!');
+                    document.getElementById('gameResult').style.display = 'none';
+                } else {
+                    alert(data.message || 'Failed to place bet');
+                }
+            } catch (error) {
+                console.error('Error placing bet:', error);
+                alert('Failed to place bet');
+            }
+        });
+
+        // Show result
+        function showResult(result) {
+            const gameResult = document.getElementById('gameResult');
+            gameResult.style.display = 'block';
+
+            let resultClass = 'even';
+            if (result.number % 2 === 1) resultClass = 'odd';
+            if (result.number === 0 || result.number === 5) resultClass = 'house';
+
+            gameResult.innerHTML = `
+                <div class="result-number ${resultClass}">${result.number}</div>
+                <div style="color: #9ca3af;">${resultClass === 'house' ? 'House Wins!' : (resultClass === 'even' ? 'Even' : 'Odd')}</div>
+            `;
+
+            if (result.won) {
+                gameResult.className = 'game-result win';
+                gameResult.innerHTML += `
+                    <h2>🎉 You Won!</h2>
+                    <div class="result-amount win">+₹${result.profit.toFixed(2)}</div>
+                    <p>Multiplier: ${result.multiplier.toFixed(2)}x</p>
+                `;
+            } else {
+                gameResult.className = 'game-result lose';
+                gameResult.innerHTML += `
+                    <h2>😢 You Lost!</h2>
+                    <div class="result-amount lose">-₹${result.bet_amount.toFixed(2)}</div>
+                    <p>Result was ${result.number}</p>
+                `;
+            }
+        }
+
+        // Load history
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/games/${gameSlug}/history`);
+                const data = await response.json();
+
+                if (data.success && data.history) {
+                    const historyList = document.getElementById('historyList');
+                    historyList.innerHTML = data.history.slice(0, 20).map(bet => {
+                        const num = bet.result?.number || 0;
+                        let resultClass = 'even';
+                        if (num % 2 === 1) resultClass = 'odd';
+                        if (num === 0 || num === 5) resultClass = 'house';
+
+                        return `
+                            <div class="history-item ${resultClass}" title="Round ${bet.round_id}">
+                                ${num}
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Initialize
+        initNumberOptions();
+        loadCurrentRound();
+        startTimer();
+        loadHistory();
+
+        // Refresh round every 3 seconds
+        setInterval(loadCurrentRound, 3000);
+    </script>
+</body>
+
+</html>
